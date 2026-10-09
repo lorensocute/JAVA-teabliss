@@ -6,8 +6,23 @@ public class AdminStatsResponse {
 
     private long totalUsers;
     private long totalProducts;
+    private long activeProducts;
     private long totalOrders;
     private BigDecimal totalRevenue;
+
+    public AdminStatsResponse(
+            long totalUsers,
+            long totalProducts,
+            long activeProducts,
+            long totalOrders,
+            BigDecimal totalRevenue
+    ) {
+        this.totalUsers = totalUsers;
+        this.totalProducts = totalProducts;
+        this.activeProducts = activeProducts;
+        this.totalOrders = totalOrders;
+        this.totalRevenue = totalRevenue;
+    }
 
     public AdminStatsResponse(
             long totalUsers,
@@ -15,10 +30,7 @@ public class AdminStatsResponse {
             long totalOrders,
             BigDecimal totalRevenue
     ) {
-        this.totalUsers = totalUsers;
-        this.totalProducts = totalProducts;
-        this.totalOrders = totalOrders;
-        this.totalRevenue = totalRevenue;
+        this(totalUsers, totalProducts, totalProducts, totalOrders, totalRevenue);
     }
 
     public long getTotalUsers() {
@@ -27,6 +39,10 @@ public class AdminStatsResponse {
 
     public long getTotalProducts() {
         return totalProducts;
+    }
+
+    public long getActiveProducts() {
+        return activeProducts;
     }
 
     public long getTotalOrders() {

@@ -26,9 +26,19 @@ public class CategoryController {
         }
     }
 
-    // Lấy danh sách category đang ACTIVE
+    // Lấy danh sách category (ACTIVE cho khách, all cho ADMIN)
     @GetMapping
-    public ApiResponse<List<CategoryResponse>> all() {
+    public ApiResponse<List<CategoryResponse>> all(
+            @RequestParam(required = false) Boolean all,
+            HttpSession session
+    ) {
+        if (Boolean.TRUE.equals(all) && "ADMIN".equals(session.getAttribute("role"))) {
+            return ApiResponse.ok(
+                    "OK",
+                    service.getAll()
+            );
+        }
+
         return ApiResponse.ok(
                 "OK",
                 service.getActive()

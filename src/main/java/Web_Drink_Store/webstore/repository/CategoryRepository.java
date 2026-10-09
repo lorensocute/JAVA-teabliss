@@ -11,6 +11,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByStatus(CategoryStatus status);
 
     boolean existsByName(String name);
+    
+    java.util.Optional<Category> findByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
 }

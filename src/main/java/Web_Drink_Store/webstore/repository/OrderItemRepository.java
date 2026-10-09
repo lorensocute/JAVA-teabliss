@@ -13,8 +13,14 @@ import java.util.List;
 public interface OrderItemRepository
         extends JpaRepository<OrderItem, Long> {
 
+    @Query("""
+        SELECT DISTINCT oi
+        FROM OrderItem oi
+        LEFT JOIN FETCH oi.toppings
+        WHERE oi.order.id = :orderId
+    """)
     List<OrderItem> findByOrderId(
-            Long orderId
+            @Param("orderId") Long orderId
     );
 
     // =========================
@@ -25,7 +31,8 @@ public interface OrderItemRepository
         SELECT new Web_Drink_Store.webstore.dto.statistics.ProductStatsResponse(
             oi.product.id,
             oi.product.name,
-            SUM(oi.quantity)
+            SUM(oi.quantity),
+            SUM(oi.lineTotal)
         )
         FROM OrderItem oi
         WHERE oi.order.status = :status

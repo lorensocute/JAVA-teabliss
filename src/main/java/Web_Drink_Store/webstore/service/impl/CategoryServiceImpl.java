@@ -40,6 +40,14 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoryResponse> getAll() {
+        return repo.findAll()
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
     public List<CategoryResponse> getActive() {
         return repo.findByStatus(CategoryStatus.ACTIVE)
                 .stream()
@@ -97,7 +105,11 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category c = get(id);
 
-        c.setStatus(CategoryStatus.INACTIVE);
+        if (c.getStatus() == CategoryStatus.ACTIVE) {
+            c.setStatus(CategoryStatus.INACTIVE);
+        } else {
+            c.setStatus(CategoryStatus.ACTIVE);
+        }
 
         repo.save(c);
     }

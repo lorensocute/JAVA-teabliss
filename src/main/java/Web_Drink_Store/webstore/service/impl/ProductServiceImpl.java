@@ -53,6 +53,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductResponse> getAll() {
+        return repo.findAll()
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
     public List<ProductResponse> getActive(Long categoryId) {
 
         List<Product> list = categoryId == null
@@ -122,7 +130,11 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = get(id);
 
-        product.setStatus(ProductStatus.INACTIVE);
+        if (product.getStatus() == ProductStatus.ACTIVE) {
+            product.setStatus(ProductStatus.INACTIVE);
+        } else {
+            product.setStatus(ProductStatus.ACTIVE);
+        }
 
         repo.save(product);
     }

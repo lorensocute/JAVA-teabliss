@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface CategoryService {
 
+    List<CategoryResponse> getAll();
+
     List<CategoryResponse> getActive();
 
     CategoryResponse getById(Long id);

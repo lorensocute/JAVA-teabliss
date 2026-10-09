@@ -5,6 +5,8 @@ import java.util.List;
 
 public interface ProductService {
 
+    List<ProductResponse> getAll();
+
     List<ProductResponse> getActive(Long categoryId);
 
     List<ProductResponse> search(String keyword, Long categoryId);

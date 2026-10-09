@@ -162,9 +162,11 @@ public class PromotionServiceImpl implements PromotionService {
                                 )
                         );
 
-        promotion.setStatus(
-                PromotionStatus.INACTIVE
-        );
+        if (promotion.getStatus() == PromotionStatus.ACTIVE) {
+            promotion.setStatus(PromotionStatus.INACTIVE);
+        } else {
+            promotion.setStatus(PromotionStatus.ACTIVE);
+        }
 
         promotionRepository.save(promotion);
     }

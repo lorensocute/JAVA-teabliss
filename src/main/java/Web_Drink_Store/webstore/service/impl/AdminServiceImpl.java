@@ -5,6 +5,7 @@ import Web_Drink_Store.webstore.dto.statistics.OrderStatsResponse;
 import Web_Drink_Store.webstore.dto.statistics.ProductStatsResponse;
 
 import Web_Drink_Store.webstore.enums.OrderStatus;
+import Web_Drink_Store.webstore.enums.ProductStatus;
 
 import Web_Drink_Store.webstore.exception.BadRequestException;
 
@@ -54,6 +55,11 @@ public class AdminServiceImpl implements AdminService {
         long totalProducts =
                 productRepository.count();
 
+        long activeProducts =
+                productRepository.countByStatus(
+                        ProductStatus.ACTIVE
+                );
+
         long totalOrders =
                 orderRepository.count();
 
@@ -65,6 +71,7 @@ public class AdminServiceImpl implements AdminService {
         return new AdminStatsResponse(
                 totalUsers,
                 totalProducts,
+                activeProducts,
                 totalOrders,
                 totalRevenue
         );

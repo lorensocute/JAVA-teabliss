@@ -28,8 +28,17 @@ public class ProductController {
 
     @GetMapping
     public ApiResponse<List<ProductResponse>> all(
-            @RequestParam(required = false) Long categoryId
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean all,
+            HttpSession session
     ) {
+        if (Boolean.TRUE.equals(all) && "ADMIN".equals(session.getAttribute("role"))) {
+            return ApiResponse.ok(
+                    "OK",
+                    service.getAll()
+            );
+        }
+
         return ApiResponse.ok(
                 "OK",
                 service.getActive(categoryId)

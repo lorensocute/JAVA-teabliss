@@ -1,5 +1,6 @@
 package Web_Drink_Store.webstore.service.impl;
 
+import Web_Drink_Store.webstore.dto.cart.ToppingResponse;
 import Web_Drink_Store.webstore.dto.order.*;
 import Web_Drink_Store.webstore.entity.*;
 import Web_Drink_Store.webstore.enums.*;
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -143,8 +145,9 @@ public class OrderServiceImpl implements OrderService {
                 );
             }
 
+            // Dùng unitPrice đã tính sẵn trong CartItem (bao gồm size + toppings)
             BigDecimal lineTotal =
-                    product.getPrice()
+                    cartItem.getUnitPrice()
                             .multiply(
                                     BigDecimal.valueOf(
                                             cartItem.getQuantity()
@@ -317,38 +320,32 @@ public class OrderServiceImpl implements OrderService {
                     new OrderItem();
 
             orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(cartItem.getQuantity());
 
-            orderItem.setProduct(
-                    product
-            );
-
-            orderItem.setQuantity(
-                    cartItem.getQuantity()
-            );
-
-            orderItem.setUnitPrice(
-                    product.getPrice()
-            );
-
+            // Dùng unitPrice từ CartItem (đã bao gồm size + toppings surcharge)
+            BigDecimal itemUnitPrice = cartItem.getUnitPrice();
+            orderItem.setUnitPrice(itemUnitPrice);
             orderItem.setLineTotal(
-                    product.getPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(
-                                            cartItem.getQuantity()
-                                    )
-                            )
+                    itemUnitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()))
             );
 
-            orderItems.save(
-                    orderItem
+            // Snapshot cấu hình đồ uống
+            orderItem.setSize(cartItem.getSize());
+            orderItem.setSweetness(cartItem.getSweetness());
+            orderItem.setIce(cartItem.getIce());
+            orderItem.setToppings(
+                    cartItem.getToppings().stream()
+                            .map(t -> new ToppingItem(t.getToppingId(), t.getToppingName(), t.getPrice()))
+                            .collect(Collectors.toList())
             );
+
+            orderItems.save(orderItem);
 
             // Trừ tồn kho
             product.setStockQuantity(
-                    product.getStockQuantity()
-                            - cartItem.getQuantity()
+                    product.getStockQuantity() - cartItem.getQuantity()
             );
-
             products.save(product);
         }
 
@@ -539,24 +536,27 @@ public class OrderServiceImpl implements OrderService {
             Order order
     ) {
 
-        List<OrderItemResponse> items =
+        List<OrderItemResponse> itemResponses =
                 orderItems
-                        .findByOrderId(
-                                order.getId()
-                        )
+                        .findByOrderId(order.getId())
                         .stream()
-                        .map(item ->
-                                new OrderItemResponse(
-                                        item.getProduct()
-                                                .getId(),
-                                        item.getProduct()
-                                                .getName(),
-                                        item.getQuantity(),
-                                        item.getUnitPrice(),
-                                        item.getLineTotal()
-                                )
-                        )
-                        .toList();
+                        .map(item -> {
+                            List<ToppingResponse> toppingResponses = item.getToppings().stream()
+                                    .map(t -> new ToppingResponse(t.getToppingId(), t.getToppingName(), t.getPrice()))
+                                    .collect(Collectors.toList());
+                            return new OrderItemResponse(
+                                    item.getProduct().getId(),
+                                    item.getProduct().getName(),
+                                    item.getQuantity(),
+                                    item.getUnitPrice(),
+                                    item.getLineTotal(),
+                                    item.getSize() != null ? item.getSize().name() : null,
+                                    item.getSweetness(),
+                                    item.getIce() != null ? item.getIce().name() : null,
+                                    toppingResponses
+                            );
+                        })
+                        .collect(Collectors.toList());
 
         return new OrderResponse(
                 order.getId(),
@@ -572,7 +572,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getTotalAmount(),
                 order.getCreatedAt(),
 
-                items
+                itemResponses
         );
     }
 }

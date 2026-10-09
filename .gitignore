@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend (store-fe) ###
+store-fe/node_modules/
+store-fe/dist/
+store-fe/dist-ssr/
+store-fe/*.local
+store-fe/.vercel/
+node_modules/
+dist/
+
+### Environment & Sensitive Files ###
+.env
+.env.*
+*.log
