@@ -42,5 +42,15 @@ public class OrderController {
                 "OK",
                 service.getMyOrderById(uid(s), id));
     }
+
+    @PatchMapping("/{id}/cancel")
+    public ApiResponse<OrderResponse> cancel(
+            @PathVariable Long id,
+            HttpSession s
+    ) {
+        return ApiResponse.ok(
+                "Hủy đơn hàng thành công",
+                service.cancelMyOrder(uid(s), id));
+    }
 }
 

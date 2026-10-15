@@ -23,4 +23,9 @@ public interface OrderService {
             Long orderId,
             OrderStatus status
     );
+
+    OrderResponse cancelMyOrder(
+            Long userId,
+            Long orderId
+    );
 }

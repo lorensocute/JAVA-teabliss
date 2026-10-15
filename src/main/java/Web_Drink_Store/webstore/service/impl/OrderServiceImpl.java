@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 @Service
 public class OrderServiceImpl implements OrderService {
 
+    private static final BigDecimal FREESHIP_THRESHOLD = new BigDecimal("150000");
+    private static final BigDecimal STANDARD_SHIPPING_FEE = new BigDecimal("25000");
+
     private final OrderRepository orders;
     private final OrderItemRepository orderItems;
     private final UserRepository users;
@@ -300,8 +303,13 @@ public class OrderServiceImpl implements OrderService {
                 discount
         );
 
+        BigDecimal shippingFee =
+                subtotal.compareTo(FREESHIP_THRESHOLD) >= 0
+                        ? BigDecimal.ZERO
+                        : STANDARD_SHIPPING_FEE;
+
         order.setTotalAmount(
-                subtotal.subtract(discount)
+                subtotal.subtract(discount).add(shippingFee)
         );
 
         orders.save(order);
@@ -432,7 +440,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order =
-                orders.findById(id)
+                orders.findByIdWithLock(id)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Không tìm thấy order"
@@ -499,25 +507,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (newStatus
                 == OrderStatus.CANCELLED) {
-
-            List<OrderItem> items =
-                    orderItems
-                            .findByOrderId(
-                                    order.getId()
-                            );
-
-            for (OrderItem item : items) {
-
-                Product product =
-                        item.getProduct();
-
-                product.setStockQuantity(
-                        product.getStockQuantity()
-                                + item.getQuantity()
-                );
-
-                products.save(product);
-            }
+            restoreStock(order.getId());
         }
 
         order.setStatus(
@@ -527,6 +517,57 @@ public class OrderServiceImpl implements OrderService {
         return map(
                 orders.save(order)
         );
+    }
+
+    // =========================
+    // KHÁCH HÀNG HỦY ĐƠN HÀNG
+    // =========================
+    @Override
+    @Transactional
+    public OrderResponse cancelMyOrder(
+            Long userId,
+            Long orderId
+    ) {
+        Order order = orders.findByIdWithLock(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy đơn hàng"
+                        )
+                );
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new BadRequestException(
+                    "Bạn không có quyền hủy đơn hàng này"
+            );
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new BadRequestException(
+                    "Chỉ có thể hủy đơn hàng khi đang ở trạng thái chờ xác nhận (PENDING)"
+            );
+        }
+
+        restoreStock(orderId);
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        return map(orders.save(order));
+    }
+
+    // =========================
+    // HOÀN TỒN KHO KHI HỦY ĐƠN
+    // =========================
+    private void restoreStock(Long orderId) {
+        List<OrderItem> items =
+                orderItems.findByOrderId(orderId);
+
+        for (OrderItem item : items) {
+            Product product = item.getProduct();
+            product.setStockQuantity(
+                    product.getStockQuantity() + item.getQuantity()
+            );
+            products.save(product);
+        }
     }
 
     // =========================
