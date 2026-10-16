@@ -3,6 +3,7 @@ package Web_Drink_Store.webstore.service.impl;
 import Web_Drink_Store.webstore.dto.promotion.PromotionRequest;
 import Web_Drink_Store.webstore.dto.promotion.PromotionResponse;
 import Web_Drink_Store.webstore.entity.Promotion;
+import Web_Drink_Store.webstore.enums.DiscountType;
 import Web_Drink_Store.webstore.enums.PromotionStatus;
 import Web_Drink_Store.webstore.exception.BadRequestException;
 import Web_Drink_Store.webstore.exception.ResourceNotFoundException;
@@ -10,6 +11,7 @@ import Web_Drink_Store.webstore.repository.PromotionRepository;
 import Web_Drink_Store.webstore.service.PromotionService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -196,6 +198,15 @@ public class PromotionServiceImpl implements PromotionService {
 
             throw new BadRequestException(
                     "Giá trị giảm phải lớn hơn 0"
+            );
+        }
+
+        if (request.getDiscountType() == DiscountType.PERCENT
+                && request.getDiscountValue()
+                .compareTo(BigDecimal.valueOf(100)) > 0) {
+
+            throw new BadRequestException(
+                    "Giá trị giảm theo phần trăm không được vượt quá 100"
             );
         }
 
